@@ -10,7 +10,7 @@ body{margin:0;background:#e9ece9;font-family:"Segoe UI",Roboto,"Helvetica Neue",
 .ctl button{border:1.5px solid var(--g);background:#fff;color:var(--g);border-radius:14px;padding:4px 10px;font-size:12px;cursor:pointer}
 .ctl button.on{background:var(--g);color:#fff}
 .stage{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
-.ph{width:360px;height:720px;border:8px solid #1b1b1b;border-radius:40px;background:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.ph{width:360px;height:640px;border:8px solid #1b1b1b;border-radius:40px;background:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column}
 .sb{font-size:11px;color:#555;display:flex;justify-content:space-between;padding:8px 18px 2px}
 .body{flex:1;overflow-y:auto;padding:6px 14px 10px}
 h1{font-size:22px;margin:6px 0 8px}
@@ -58,13 +58,16 @@ h1{font-size:22px;margin:6px 0 8px}
 .flow .task{border-left:4px solid var(--g);padding-left:10px;margin:6px 0}
 .flow .go{display:inline-block;margin-top:8px;background:var(--g);color:#fff;border:0;border-radius:20px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none}
 .hide{display:none!important}
+.dn{display:inline-block;font-size:26px;font-weight:800;color:var(--dg);margin-right:10px}
+#dhdr{margin-bottom:10px}
+#flow{margin-top:12px}
 .pin{cursor:pointer;width:16px;height:16px}
 .pin.dim{background:#8a948f;width:13px;height:13px}
 .pin.cur{background:var(--dg);width:22px;height:22px;box-shadow:0 0 0 3px #fff}
 .sheet{border:1.5px solid var(--g);border-radius:12px;padding:8px 10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;font-size:13px;background:#f7fbf9}
 .sheet small{color:#666;display:block}
 </style></head><body>
-<div class="flow" id="flow"></div>
+<div class="flow hide" id="dhdr"></div>
 <div class="ctl" id="ctl">
   <div class="grp">Version: <button id="m-base">Current app</button><button id="m-new">Redesign</button></div>
   <div class="grp">Situation: <button id="s-1">1 · At the store (Tech Square)</button><button id="s-2">2 · Ordering ahead from home</button><button id="s-3">3 · Order again</button></div>
@@ -74,6 +77,7 @@ h1{font-size:22px;margin:6px 0 8px}
   <div class="ph" id="phone"></div>
   <div class="side" id="side"></div>
 </div>
+<div class="flow" id="flow"></div>
 <script>
 // ---------- data (fictional distances; Georgia Tech scenario) ----------
 const STORES={
@@ -236,28 +240,33 @@ function link(){
  return "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?"+q.map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
 }
 function flow(){
- const f=document.getElementById("flow");
- if(ADMIN){document.getElementById("ctl").classList.remove("hide");document.getElementById("side").classList.remove("hide");if(P.idx<0){f.classList.add("hide");return}}
+ const f=document.getElementById("flow"),hd=document.getElementById("dhdr"),stage=document.querySelector(".stage");
+ if(ADMIN){document.getElementById("ctl").classList.remove("hide");document.getElementById("side").classList.remove("hide");if(P.idx<0){f.classList.add("hide");hd.classList.add("hide");return}}
  else{document.getElementById("ctl").classList.add("hide");document.getElementById("side").classList.add("hide")}
- f.classList.remove("hide");
- const stage=document.querySelector(".stage");
- if(P.idx<0){stage.classList.remove("hide");f.innerHTML=`<h2>Coffee-ordering app: quick test</h2><p>Thank you for helping with my CS6750 project. You will try a <b>fictional</b> coffee-ordering app in two designs (Design X and Design Y). In each design you do three short tasks and then answer three quick questions about it. At the end you send your answers with one click. About 8 minutes in total. Taking part is voluntary and you can stop at any time. Nothing real is ordered, and this page collects no personal data.</p><p>Please use the app like you would use a real one. The page counts your taps and time.</p><button class="go" id="go">Start</button>`;stage.classList.add("hide");document.getElementById("go").onclick=()=>{stage.classList.remove("hide");P.idx=-1;nextStage()};return}
+ f.classList.remove("hide");hd.classList.add("hide");
+ if(P.idx<0){stage.classList.remove("hide");stage.classList.add("hide");f.innerHTML=`<h2>Coffee-ordering app: quick test</h2><p>Thank you for helping with my CS6750 project. You will try a <b>fictional</b> coffee-ordering app in two designs (Design X and Design Y). In each design you do three short tasks and then answer three quick questions about that design right away. At the end you send your answers with one click. About 8 minutes in total. Taking part is voluntary and you can stop at any time. Nothing real is ordered, and this page collects no personal data.</p><p>Please use the app like you would use a real one. The page counts your taps and time.</p><button class="go" id="go">Start</button>`;document.getElementById("go").onclick=()=>{stage.classList.remove("hide");P.idx=-1;nextStage()};return}
  if(P.idx>=STAGES.length){
   stage.classList.add("hide");
   f.innerHTML=`<h2>Thank you!</h2><p>Last step: on the next page (Georgia Tech login) all your answers are already filled in. <b>Just press Submit.</b> You can still change an answer there if you want.</p><a class="go" href="${link()}" target="_blank" rel="noopener">Open the form and submit</a>`;return}
  const g=STAGES[P.idx];
  if(g.t==="rate"){
-  stage.classList.add("hide");const r=P.rate[g.m];
-  f.innerHTML=`<span class="step">${DN(g.m)} · questions</span><h2>About ${DN(g.m)}</h2><p>Think about the three tasks you just did in <b>${DN(g.m)}</b>. How much do you agree?</p>`+STM.map((t,i)=>`<div class="task"><b>${t}</b><div style="margin-top:4px">${[1,2,3,4,5].map(v=>`<label style="margin-right:10px;white-space:nowrap"><input type="radio" name="r${i}" value="${v}" ${r[i]===v?"checked":""}> ${v}</label>`).join("")}</div></div>`).join("")+`<div class="small">1 = strongly disagree, 5 = strongly agree</div><button class="go" id="rnext">Continue</button>`;
-  document.getElementById("rnext").onclick=()=>{const vals=[0,1,2].map(i=>+(document.querySelector(`input[name=r${i}]:checked`)||{}).value||0);if(vals.includes(0)){alert("Please answer all three questions.");return}P.rate[g.m]=vals;stage.classList.remove("hide");nextStage()};return}
+  if(!S.free){fresh({mode:g.m,scn:1});S.free=true;render()}
+  stage.classList.remove("hide");hd.classList.remove("hide");
+  hd.innerHTML=`<span class="dn">${DN(g.m)}</span><span class="step">Questions</span><div class="small">The design is still here to look at and tap while you answer. Think about the three tasks you just did in <b>${DN(g.m)}</b>.</div>`;
+  const r=P.rate[g.m];
+  f.innerHTML=`<h2>About ${DN(g.m)}</h2><p>How much do you agree?</p>`+STM.map((t,i)=>`<div class="task"><b>${t}</b><div style="margin-top:4px">${[1,2,3,4,5].map(v=>`<label style="margin-right:10px;white-space:nowrap"><input type="radio" name="r${i}" value="${v}" ${r[i]===v?"checked":""}> ${v}</label>`).join("")}</div></div>`).join("")+`<div class="small">1 = strongly disagree, 5 = strongly agree</div><button class="go" id="rnext">Continue</button>`;
+  document.getElementById("rnext").onclick=()=>{const vals=[0,1,2].map(i=>+(document.querySelector(`input[name=r${i}]:checked`)||{}).value||0);if(vals.includes(0)){alert("Please answer all three questions.");return}P.rate[g.m]=vals;nextStage()};return}
  if(g.t==="final"){
   stage.classList.add("hide");
   f.innerHTML=`<h2>Last questions</h2><div class="task"><b>Which design would you prefer to use?</b><div style="margin-top:4px">${["Design X","Design Y","No difference"].map(v=>`<label style="margin-right:12px"><input type="radio" name="pf" value="${v}" ${P.pref===v?"checked":""}> ${v}</label>`).join("")}</div></div><div class="task"><b>(Optional) Why? What was clear or confusing?</b><textarea id="why" rows="2" style="width:100%">${P.why}</textarea></div><div class="task"><b>(Optional) What would you change in Design Y?</b><textarea id="chg" rows="2" style="width:100%">${P.chg}</textarea></div><div class="task"><b>What is your age group?</b><select id="age"><option value="">Choose</option>${["18-24","25-34","35-44","45-54","55 or older","Prefer not to say"].map(v=>`<option ${P.age===v?"selected":""}>${v}</option>`).join("")}</select></div><p class="small">Design X = the design you used in tasks ${ORD==="A"?"1-3":"4-6"}; Design Y = tasks ${ORD==="A"?"4-6":"1-3"}.</p><button class="go" id="fin">Review and send</button>`;
   document.getElementById("fin").onclick=()=>{P.pref=(document.querySelector("input[name=pf]:checked")||{}).value||"";P.why=document.getElementById("why").value;P.chg=document.getElementById("chg").value;P.age=document.getElementById("age").value;if(!P.pref||!P.age){alert("Please choose a preferred design and your age group.");return}P.idx++;flow()};return}
  const m=g.m,n=g.n,rn=runNo();
- if(S.done){f.innerHTML=`<span class="step">Task ${rn} of 6 · ${DN(m)}</span><h2>Order placed</h2><p>Nice. When you are ready, go on.</p><button class="go" id="next">Next</button>`;
+ stage.classList.remove("hide");hd.classList.remove("hide");
+ if(S.done){hd.innerHTML=`<span class="dn">${DN(m)}</span><span class="step">Task ${rn} of 6</span><div class="task"><b>Order placed.</b> Press Next when you are ready.</div>`;
+  f.innerHTML=`<button class="go" id="next">Next</button>`;
   document.getElementById("next").onclick=()=>{P.res.push(`${verName(m)}-S${n}:store=${S.store},taps=${S.taps},sec=${S.tDone||""},warn=${S.warnShown?1:0},kept=${S.keptWrong?1:0}`);nextStage()};return}
- f.innerHTML=`<span class="step">Task ${rn} of 6 · ${DN(m)}</span><div class="task">${TASK[n]}</div><div class="small">Tap on the phone below. Start from the Home screen.</div>`;
+ hd.innerHTML=`<span class="dn">${DN(m)}</span><span class="step">Task ${rn} of 6</span><div class="task">${TASK[n]}</div>`;
+ f.innerHTML=`<div class="small">Tap on the phone above. Start from the Home screen. The Next button appears here after you place the order.</div>`;
 }
 flow();
 </script></body></html>
