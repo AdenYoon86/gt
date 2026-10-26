@@ -233,7 +233,7 @@ const STAGES=[...runs(FIRST),...runs(SECOND),{t:"final"}];
 const P={idx:-1,res:[],rate:{base:[0,0,0],new:[0,0,0]},pref:"",why:"",chg:"",age:"Prefer not to say"};
 const DN=m=>m==="base"?"Design X":"Design Y";
 function verName(m){return m==="base"?"cur":"new"}
-function startRun(){const g=STAGES[P.idx];fresh({mode:g.m,scn:g.n});S.t0=null;render();flow()}
+function startRun(){const g=STAGES[P.idx];fresh({mode:g.m,scn:g.n});if(g.n!==3&&!ADMIN)S.screen="order";S.t0=null;render();flow()}
 function nextStage(){P.idx++;const g=STAGES[P.idx];if(g&&g.t==="run")startRun();else flow()}
 function runNo(){return STAGES.slice(0,P.idx+1).filter(g=>g.t==="run").length}
 function link(){
