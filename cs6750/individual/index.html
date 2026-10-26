@@ -62,7 +62,7 @@ h1{font-size:22px;margin:6px 0 8px}
 <div class="flow" id="flow"></div>
 <div class="ctl" id="ctl">
   <div class="grp">Version: <button id="m-base">Current app</button><button id="m-new">Redesign</button></div>
-  <div class="grp">Situation: <button id="s-1">1 · At the store (Tech Square)</button><button id="s-2">2 · Ordering ahead from home</button></div>
+  <div class="grp">Situation: <button id="s-1">1 · At the store (Tech Square)</button><button id="s-2">2 · Ordering ahead from home</button><button id="s-3">3 · Order again</button></div>
   <div class="grp"><button id="reset">Restart task</button></div>
 </div>
 <div class="stage">
@@ -77,7 +77,7 @@ const STORES={
  dec:{name:"Decatur Square",sub:"101 E Court Sq",land:"Facing the courthouse square",hours:"Open until 9 PM"},
  len:{name:"Lenox Square",sub:"3393 Peachtree Rd NE",land:"Inside the Lenox mall, Level 1",hours:"Open until 9 PM"}
 };
-const DIST={1:{tech:0,buck:4.9,dec:6.1,len:6.5},2:{tech:6.0,buck:7.5,dec:0.4,len:9.0}};
+const DIST={1:{tech:0,buck:4.9,dec:6.1,len:6.5},2:{tech:6.0,buck:7.5,dec:0.4,len:9.0},3:{tech:0,buck:4.9,dec:6.1,len:6.5}};
 const MENU=[{id:"latte",n:"Iced Caffe Latte",p:5.45},{id:"brew",n:"Cold Brew",p:4.75},{id:"cro",n:"Butter Croissant",p:3.75}];
 let S;
 function fresh(keep){S={mode:keep?keep.mode:"base",scn:keep?keep.scn:1,screen:"home",tab:"Favorites",store:null,cart:[],taps:0,t0:null,log:[],done:false,warned:false,ready:false};}
@@ -90,36 +90,36 @@ function logEv(t){const now=S.t0?((Date.now()-S.t0)/1000).toFixed(1):"0.0";S.log
 function list(){
  const ks=Object.keys(STORES);
  if(S.mode==="base"){
-   if(S.tab==="Nearby") return S.scn===1?["tech","buck","dec","len"]:["dec","tech","buck","len"];
-   if(S.tab==="Previous") return S.scn===1?["tech","buck"]:["tech","dec"];
-   return S.scn===1?["buck","dec","len"]:["dec","tech","buck"];     // favorites: far stores first, as observed
+   if(S.tab==="Nearby") return S.scn!==2?["tech","buck","dec","len"]:["dec","tech","buck","len"];
+   if(S.tab==="Previous") return S.scn!==2?["tech","buck"]:["tech","dec"];
+   return S.scn!==2?["buck","dec","len"]:["dec","tech","buck"];     // favorites: far stores first, as observed
  }
- if(S.tab==="Favorites") return S.scn===1?["buck","dec","len"]:["tech","dec","buck"];
- if(S.tab==="Previous") return S.scn===1?["tech","buck"]:["tech","dec"];
+ if(S.tab==="Favorites") return S.scn!==2?["buck","dec","len"]:["tech","dec","buck"];
+ if(S.tab==="Previous") return S.scn!==2?["tech","buck"]:["tech","dec"];
  return ks.sort((a,b)=>DIST[S.scn][a]-DIST[S.scn][b]);
 }
 function rowHtml(k){return `<div class="row" data-a="pick" data-k="${k}"><div><b>${STORES[k].name}</b><small>${d(k)} mi · ${STORES[k].hours}</small></div><div class="btn">Order here</div></div>`}
-function map(){const you=S.scn===1?'<div class="dot" style="left:150px;top:46px"></div><div class="maplbl" style="left:120px;top:72px">You are here · Georgia Tech</div><div class="pin" style="left:157px;top:44px"></div>':'<div class="dot" style="left:60px;top:70px"></div><div class="maplbl" style="left:30px;top:90px">You are here · home</div><div class="pin" style="left:240px;top:30px"></div>';return `<div class="map">${you}<div class="pin" style="left:300px;top:70px"></div></div>`}
+function map(){const you=S.scn!==2?'<div class="dot" style="left:150px;top:46px"></div><div class="maplbl" style="left:120px;top:72px">You are here · Georgia Tech</div><div class="pin" style="left:157px;top:44px"></div>':'<div class="dot" style="left:60px;top:70px"></div><div class="maplbl" style="left:30px;top:90px">You are here · home</div><div class="pin" style="left:240px;top:30px"></div>';return `<div class="map">${you}<div class="pin" style="left:300px;top:70px"></div></div>`}
 // ---------- screens ----------
-function screenHome(){return `<h1>Good morning</h1><div class="hello"><b>124 Stars</b><br><span class="small">76 more for your next reward</span></div><div class="card">Pick up your favorites<br><span class="small">Tap Order to start</span></div><div class="card">Offers: 2x Stars on cold drinks</div>`}
+function screenHome(){const again=S.scn===3?`<div class="card"><b>Order again</b><br>Iced Caffe Latte \u00b7 Grande<br><span class="small">Last Saturday \u00b7 Buckhead Village</span><div class="btn fill big" data-a="reorder">Order again</div></div>`:"";return `<h1>Good morning</h1>${again}<div class="hello"><b>124 Stars</b><br><span class="small">76 more for your next reward</span></div><div class="card">Pick up your favorites<br><span class="small">Tap Order to start</span></div><div class="card">Offers: 2x Stars on cold drinks</div>`}
 function screenOrder(){
  let h=`<h1>${S.mode==="base"?"Order · Pickup store":"Order"}</h1>`;
  if(S.mode==="new"){
-   if(S.scn===1){const k=nearStore();h+=`<div class="banner"><div class="t">You are at</div><div class="s">${STORES[k].name}</div><div class="t">${STORES[k].sub}</div><div class="btn fill big" data-a="pick" data-k="${k}">Order here</div></div>`}
+   if(S.scn!==2){const k=nearStore();h+=`<div class="banner"><div class="t">You are at</div><div class="s">${STORES[k].name}</div><div class="t">${STORES[k].sub}</div><div class="btn fill big" data-a="pick" data-k="${k}">Order here</div></div>`}
    else{h+=`<div class="banner"><div class="t">Your regular store</div><div class="s">Tech Square</div><div class="t">${d("tech")} mi away · ${STORES.tech.hours}</div><div class="btn fill big" data-a="pick" data-k="tech">Order ahead for pickup here</div></div>`}
-   h+=`<div class="small" style="margin:4px 2px">${S.scn===1?"Other stores nearby":"Other stores"}</div>`;
+   h+=`<div class="small" style="margin:4px 2px">${S.scn!==2?"Other stores nearby":"Other stores"}</div>`;
    if(S.tab==="Favorites"&&false)S.tab="Nearby";
  }
  if(S.mode==="new"&&S.tab==="Favorites"&&!S.touched)S.tab="Nearby";
  h+=`<div class="tabs">${["Nearby","Previous","Favorites"].map(t=>`<div class="tab ${S.tab===t?"on":""}" data-a="tab" data-k="${t}">${t}</div>`).join("")}</div>`;
  if(S.mode==="base")h+=map();
- h+=list().filter(k=>!(S.mode==="new"&&((S.scn===1&&k==="tech")||(S.scn===2&&k==="tech")))).map(rowHtml).join("");
+ h+=list().filter(k=>!(S.mode==="new"&&((S.scn!==2&&k==="tech")||(S.scn===2&&k==="tech")))).map(rowHtml).join("");
  return h;
 }
 function screenMenu(){
  const st=STORES[S.store];let h="";
  if(S.mode==="base")h+=`<div class="tinystore"><span>Pickup: ${st.name}</span><u data-a="change">change</u></div>`;
- else h+=`<div class="storebar"><div><small>Pickup at</small><b>${st.name}</b><small>${S.scn===1&&S.store==="tech"?"You are here · ":d(S.store)+" mi · "}${st.hours}</small></div><div class="chg" data-a="change">Change</div></div>`;
+ else h+=`<div class="storebar"><div><small>Pickup at</small><b>${st.name}</b><small>${S.scn!==2&&S.store==="tech"?"You are here · ":d(S.store)+" mi · "}${st.hours}</small></div><div class="chg" data-a="change">Change</div></div>`;
  h+=`<h1 style="font-size:18px">Menu</h1>`;
  if(S.mode==="new")h+=`<div class="usual"><b>Your usual</b><br>Iced Caffe Latte · Grande<br><span class="small">Ready in about 4 min at ${st.name}</span><div class="btn fill big" data-a="add" data-k="latte">Add your usual</div></div>`;
  h+=MENU.map(m=>`<div class="item"><div>${m.n}<br><small>$${m.p.toFixed(2)}</small></div><div class="btn" data-a="add" data-k="${m.id}">Add</div></div>`).join("");
@@ -147,13 +147,13 @@ function render(){
  const on=scr==="home"?"home":"order";
  document.getElementById("phone").innerHTML=`<div class="sb"><span>9:02</span><span>▮▮▮ 80%</span></div><div class="body">${body}</div><div class="nav"><span class="${on==="home"?"on":""}" data-a="nav" data-k="home">Home</span><span data-a="none">Scan</span><span class="${on==="order"?"on":""}" data-a="nav" data-k="order">Order</span><span data-a="none">Offers</span></div>`;
  ["base","new"].forEach(m=>document.getElementById("m-"+m).classList.toggle("on",S.mode===m));
- [1,2].forEach(n=>document.getElementById("s-"+n).classList.toggle("on",S.scn===n));
- side();if(typeof flow==="function"&&typeof P!=="undefined"&&P.idx>=0)flow();
+ [1,2,3].forEach(n=>document.getElementById("s-"+n).classList.toggle("on",S.scn===n));
+ side();if(typeof flow==="function"&&typeof P!=="undefined"&&P.idx>=0&&STAGES[P.idx]&&STAGES[P.idx].t==="run")flow();
 }
 function side(){if(!ADMIN&&false)return;
  const target="tech";let res="";
  if(S.done){const ok=S.store===target;res=`<div class="k"><span>Ordered at</span><b class="${ok?"ok":"bad"}">${STORES[S.store].name} ${ok?"✔ correct":"✘ wrong store"}</b></div>`}
- const task=S.scn===1?"Task 1: You are inside the Starbucks at Tech Square. Order your usual drink for pickup at the store you are in.":"Task 2: You are at home in Decatur. Order ahead your usual drink for pickup at your regular store, Tech Square.";
+ const task=S.scn!==2?"Task 1: You are inside the Starbucks at Tech Square. Order your usual drink for pickup at the store you are in.":"Task 2: You are at home in Decatur. Order ahead your usual drink for pickup at your regular store, Tech Square.";
  document.getElementById("side").innerHTML=`<h3>Research panel</h3><div class="small" style="margin-bottom:6px">${task}</div><div class="k"><span>Version</span><b>${S.mode==="base"?"Current app":"Redesign"}</b></div><div class="k"><span>Taps</span><b>${S.taps}</b></div><div class="k"><span>Time to first order screen</span><b>${S.tFirst||"–"}</b></div>${res}<div class="small" style="margin-top:8px">Event log</div><div class="log">${S.log.join("<br>")||"(empty)"}</div>`;
 }
 // ---------- events ----------
@@ -167,6 +167,7 @@ document.addEventListener("click",e=>{
  if(b.id==="m-new")return(fresh({mode:"new",scn:S.scn}),render());
  if(b.id==="s-1")return(fresh({mode:S.mode,scn:1}),render());
  if(b.id==="s-2")return(fresh({mode:S.mode,scn:2}),render());
+ if(b.id==="s-3")return(fresh({mode:S.mode,scn:3}),render());
 });
 function act(a,k){
  if(a==="none")return;
@@ -174,13 +175,14 @@ function act(a,k){
  if(!S.t0)S.t0=Date.now();
  S.taps++;
  if(a==="nav"){logEv("nav "+k);S.screen=k;if(k==="order"&&!S.tFirst)S.tFirst=((Date.now()-S.t0)/1000).toFixed(1)+"s"}
+ else if(a==="reorder"){S.store="buck";S.cart=["latte"];S.screen="review";S.warnDismissed=false;logEv("order again (Buckhead Village)")}
  else if(a==="tab"){S.tab=k;S.touched=true;logEv("tab "+k)}
  else if(a==="pick"){S.store=k;S.screen="menu";S.warnDismissed=false;logEv("picked store: "+STORES[k].name)}
  else if(a==="change"){S.screen="order";logEv("change store")}
  else if(a==="add"){S.cart.push(k);logEv("add "+k)}
  else if(a==="review"){S.screen="review";logEv("review")}
  else if(a==="fixstore"){S.store=k;S.warnDismissed=false;logEv("warning: switched to "+STORES[k].name)}
- else if(a==="keepstore"){S.warnDismissed=true;logEv("warning: kept "+STORES[S.store].name)}
+ else if(a==="keepstore"){S.warnDismissed=true;S.keptWrong=true;logEv("warning: kept "+STORES[S.store].name)}
  else if(a==="place"){
    const near=nearStore();if(S.mode==="new"&&near&&near!==S.store&&!S.warnDismissed){logEv("place blocked by warning");render();return}
    S.done=true;S.tDone=((Date.now()-S.t0)/1000).toFixed(1);S.screen="done";logEv("PLACED at "+STORES[S.store].name)}
@@ -191,27 +193,53 @@ function act(a,k){
 const QS=new URLSearchParams(location.search);
 const ADMIN=QS.get("admin")==="1";
 const ORD=(QS.get("o")||"A").toUpperCase()==="B"?"B":"A";
-const FORM_ID="u5ghSHuuJUuLem1_Mvqgg6srEbhhml1Iq0yH75-lli5UNlBXRkFUTVc5WE9WT0kzMzFXWjJKVDAxTC4u",FORM_Q="rbdcfdd1f19974fdcf2a973df528eca00";
-const SEQ=ORD==="A"?[["base",1],["base",2],["new",1],["new",2]]:[["new",1],["new",2],["base",1],["base",2]];
-const TASK={1:"You are inside the Starbucks at Tech Square on the Georgia Tech campus. Order your usual iced latte for pickup at the store you are in.",2:"You are at home in Decatur. Order ahead your usual iced latte for pickup at your regular store, Tech Square."};
-const P={idx:-1,res:[]};
+const FORM_ID="u5ghSHuuJUuLem1_Mvqgg6srEbhhml1Iq0yH75-lli5UNlBXRkFUTVc5WE9WT0kzMzFXWjJKVDAxTC4u";
+const FQ={res:"rbdcfdd1f19974fdcf2a973df528eca00",x:["r8100d8dd10a2015df96af08d460195ec","r9335876c3948864d433e55c64e5d4244","rb1f1cab3b9c883349f77236b15d1e0da"],y:["r2945387bdc6d43bcdc1d98d6a5aae1d8","r08b6bc0f61c0e47ab77b3d5fc8f48a9e","r1077e1c973367e210e148fa5d3543781"],pref:"rf4d50f1eb72b3d1120583f0abe6940ed",why:"re7570f12de7e6dc4b923efa8d2c59be9",chg:"r57c2dec9dbe5a051a585a5235f55252c",age:"r2ef6a2d60071f289bd5dbba930b0a74e"};
+const LK=["1 Strongly disagree","2 Disagree","3 Neutral","4 Agree","5 Strongly agree"];
+const STM=["The app helped me order at the right store.","It was easy to understand.","It would annoy me if I ordered ahead from home with this app."];
+const TASK={1:"You are inside the Starbucks at Tech Square on the Georgia Tech campus. Order your usual iced latte for pickup at the store you are in.",2:"You are at home in Decatur. Order ahead your usual iced latte for pickup at your regular store, Tech Square.",3:"You are inside the Starbucks at Tech Square. On the Home screen, use the <b>Order again</b> button to reorder your usual iced latte from last Saturday, then place the order."};
+const runs=m=>[1,2,3].map(n=>({t:"run",m,n}));
+const FIRST=ORD==="A"?"base":"new",SECOND=ORD==="A"?"new":"base";
+const STAGES=[...runs(FIRST),{t:"rate",m:FIRST},...runs(SECOND),{t:"rate",m:SECOND},{t:"final"}];
+const P={idx:-1,res:[],rate:{base:[0,0,0],new:[0,0,0]},pref:"",why:"",chg:"",age:""};
+const DN=m=>m==="base"?"Design X":"Design Y";
 function verName(m){return m==="base"?"cur":"new"}
-function startRun(){const [m,n]=SEQ[P.idx];fresh({mode:m,scn:n});S.t0=null;S.run=P.idx;render();flow()}
+function startRun(){const g=STAGES[P.idx];fresh({mode:g.m,scn:g.n});S.t0=null;render();flow()}
+function nextStage(){P.idx++;const g=STAGES[P.idx];if(g&&g.t==="run")startRun();else flow()}
+function runNo(){return STAGES.slice(0,P.idx+1).filter(g=>g.t==="run").length}
+function link(){
+ const code="o="+ORD+";"+P.res.join(";");
+ const q=[["id",FORM_ID],[FQ.res,code]];
+ P.rate.base.forEach((v,i)=>q.push([FQ.x[i],LK[v-1]]));
+ P.rate.new.forEach((v,i)=>q.push([FQ.y[i],LK[v-1]]));
+ q.push([FQ.pref,P.pref],[FQ.age,P.age]);
+ if(P.why.trim())q.push([FQ.why,P.why.trim()]);
+ if(P.chg.trim())q.push([FQ.chg,P.chg.trim()]);
+ return "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?"+q.map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
+}
 function flow(){
  const f=document.getElementById("flow");
  if(ADMIN){document.getElementById("ctl").classList.remove("hide");document.getElementById("side").classList.remove("hide");if(P.idx<0){f.classList.add("hide");return}}
  else{document.getElementById("ctl").classList.add("hide");document.getElementById("side").classList.add("hide")}
  f.classList.remove("hide");
- if(P.idx<0){f.innerHTML=`<h2>Coffee-ordering app: quick test</h2><p>Thank you for helping with my CS6750 project. You will try a <b>fictional</b> coffee-ordering app in two designs (Design X and Design Y) and do the same two tasks in each design (4 short tasks, about 5 minutes). Then you answer a few questions in a Microsoft Form. Taking part is voluntary and you can stop at any time. Nothing real is ordered, and no personal data is collected by this page.</p><p>Please use the app like you would use a real one. The page counts your taps and time.</p><button class="go" id="go">Start</button>`;document.getElementById("go").onclick=()=>{P.idx=0;startRun()};return}
- if(P.idx>=SEQ.length){
-   const code="o="+ORD+";"+P.res.join(";");
-   const url="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id="+FORM_ID+"&"+FORM_Q+"="+encodeURIComponent(code);
-   f.innerHTML=`<h2>All done, thank you!</h2><p>Last step: a short Microsoft Form (about 2 minutes, Georgia Tech login). Your task results are filled in for you; please do not change that first answer.</p><a class="go" href="${url}" target="_blank" rel="noopener">Continue to the questions</a>`;
-   document.querySelector(".stage").classList.add("hide");return}
- const [m,n]=SEQ[P.idx];const DN=m==="base"?"Design X":"Design Y";
- if(S.done){f.innerHTML=`<span class="step">Task ${P.idx+1} of ${SEQ.length} · ${DN}</span><h2>Order placed</h2><p>Nice. When you are ready, go on.</p><button class="go" id="next">${P.idx+1<SEQ.length?"Next task":"Finish"}</button>`;
-  document.getElementById("next").onclick=()=>{const t=S.tFirst||"";const sec=S.tDone||"";P.res.push(`${verName(m)}-S${n}:store=${S.store},taps=${S.taps},sec=${sec},warn=${S.warnShown?1:0}`);P.idx++;if(P.idx<SEQ.length)startRun();else flow()};return}
- f.innerHTML=`<span class="step">Task ${P.idx+1} of ${SEQ.length} · ${DN}</span><div class="task">${TASK[n]}</div><div class="small">Tap on the phone below. Start from the Home screen.</div>`;
+ const stage=document.querySelector(".stage");
+ if(P.idx<0){stage.classList.remove("hide");f.innerHTML=`<h2>Coffee-ordering app: quick test</h2><p>Thank you for helping with my CS6750 project. You will try a <b>fictional</b> coffee-ordering app in two designs (Design X and Design Y). In each design you do three short tasks and then answer three quick questions about it. At the end you send your answers with one click. About 8 minutes in total. Taking part is voluntary and you can stop at any time. Nothing real is ordered, and this page collects no personal data.</p><p>Please use the app like you would use a real one. The page counts your taps and time.</p><button class="go" id="go">Start</button>`;stage.classList.add("hide");document.getElementById("go").onclick=()=>{stage.classList.remove("hide");P.idx=-1;nextStage()};return}
+ if(P.idx>=STAGES.length){
+  stage.classList.add("hide");
+  f.innerHTML=`<h2>Thank you!</h2><p>Last step: on the next page (Georgia Tech login) all your answers are already filled in. <b>Just press Submit.</b> You can still change an answer there if you want.</p><a class="go" href="${link()}" target="_blank" rel="noopener">Open the form and submit</a>`;return}
+ const g=STAGES[P.idx];
+ if(g.t==="rate"){
+  stage.classList.add("hide");const r=P.rate[g.m];
+  f.innerHTML=`<span class="step">${DN(g.m)} · questions</span><h2>About ${DN(g.m)}</h2><p>Think about the three tasks you just did in <b>${DN(g.m)}</b>. How much do you agree?</p>`+STM.map((t,i)=>`<div class="task"><b>${t}</b><div style="margin-top:4px">${[1,2,3,4,5].map(v=>`<label style="margin-right:10px;white-space:nowrap"><input type="radio" name="r${i}" value="${v}" ${r[i]===v?"checked":""}> ${v}</label>`).join("")}</div></div>`).join("")+`<div class="small">1 = strongly disagree, 5 = strongly agree</div><button class="go" id="rnext">Continue</button>`;
+  document.getElementById("rnext").onclick=()=>{const vals=[0,1,2].map(i=>+(document.querySelector(`input[name=r${i}]:checked`)||{}).value||0);if(vals.includes(0)){alert("Please answer all three questions.");return}P.rate[g.m]=vals;stage.classList.remove("hide");nextStage()};return}
+ if(g.t==="final"){
+  stage.classList.add("hide");
+  f.innerHTML=`<h2>Last questions</h2><div class="task"><b>Which design would you prefer to use?</b><div style="margin-top:4px">${["Design X","Design Y","No difference"].map(v=>`<label style="margin-right:12px"><input type="radio" name="pf" value="${v}" ${P.pref===v?"checked":""}> ${v}</label>`).join("")}</div></div><div class="task"><b>(Optional) Why? What was clear or confusing?</b><textarea id="why" rows="2" style="width:100%">${P.why}</textarea></div><div class="task"><b>(Optional) What would you change in Design Y?</b><textarea id="chg" rows="2" style="width:100%">${P.chg}</textarea></div><div class="task"><b>What is your age group?</b><select id="age"><option value="">Choose</option>${["18-24","25-34","35-44","45-54","55 or older","Prefer not to say"].map(v=>`<option ${P.age===v?"selected":""}>${v}</option>`).join("")}</select></div><p class="small">Design X = the design you used in tasks ${ORD==="A"?"1-3":"4-6"}; Design Y = tasks ${ORD==="A"?"4-6":"1-3"}.</p><button class="go" id="fin">Review and send</button>`;
+  document.getElementById("fin").onclick=()=>{P.pref=(document.querySelector("input[name=pf]:checked")||{}).value||"";P.why=document.getElementById("why").value;P.chg=document.getElementById("chg").value;P.age=document.getElementById("age").value;if(!P.pref||!P.age){alert("Please choose a preferred design and your age group.");return}P.idx++;flow()};return}
+ const m=g.m,n=g.n,rn=runNo();
+ if(S.done){f.innerHTML=`<span class="step">Task ${rn} of 6 · ${DN(m)}</span><h2>Order placed</h2><p>Nice. When you are ready, go on.</p><button class="go" id="next">Next</button>`;
+  document.getElementById("next").onclick=()=>{P.res.push(`${verName(m)}-S${n}:store=${S.store},taps=${S.taps},sec=${S.tDone||""},warn=${S.warnShown?1:0},kept=${S.keptWrong?1:0}`);nextStage()};return}
+ f.innerHTML=`<span class="step">Task ${rn} of 6 · ${DN(m)}</span><div class="task">${TASK[n]}</div><div class="small">Tap on the phone below. Start from the Home screen.</div>`;
 }
 flow();
 </script></body></html>
