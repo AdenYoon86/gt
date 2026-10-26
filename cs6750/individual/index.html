@@ -17,7 +17,7 @@ h1{font-size:22px;margin:6px 0 8px}
 .tabs{display:flex;gap:6px;margin-bottom:8px}
 .tab{flex:1;text-align:center;border:1.5px solid var(--g);border-radius:20px;font-size:12px;padding:5px 0;color:var(--g);cursor:pointer}
 .tab.on{background:var(--dg);border-color:var(--dg);color:#fff;font-weight:700}
-.map{height:110px;border-radius:10px;background:#E6ECE8;position:relative;overflow:hidden;margin-bottom:8px;border:1px solid #c9d3cd}
+.map{height:132px;border-radius:10px;background:#E6ECE8;position:relative;overflow:hidden;margin-bottom:8px;border:1px solid #c9d3cd}
 .map::before{content:"";position:absolute;left:0;right:0;top:55%;height:9px;background:#fff}
 .map::after{content:"";position:absolute;top:0;bottom:0;left:38%;width:9px;background:#fff}
 .dot{position:absolute;z-index:2;width:16px;height:16px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 6px rgba(26,115,232,.25)}
@@ -58,6 +58,11 @@ h1{font-size:22px;margin:6px 0 8px}
 .flow .task{border-left:4px solid var(--g);padding-left:10px;margin:6px 0}
 .flow .go{display:inline-block;margin-top:8px;background:var(--g);color:#fff;border:0;border-radius:20px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none}
 .hide{display:none!important}
+.pin{cursor:pointer;width:16px;height:16px}
+.pin.dim{background:#8a948f;width:13px;height:13px}
+.pin.cur{background:var(--dg);width:22px;height:22px;box-shadow:0 0 0 3px #fff}
+.sheet{border:1.5px solid var(--g);border-radius:12px;padding:8px 10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;font-size:13px;background:#f7fbf9}
+.sheet small{color:#666;display:block}
 </style></head><body>
 <div class="flow" id="flow"></div>
 <div class="ctl" id="ctl">
@@ -75,9 +80,11 @@ const STORES={
  tech:{name:"Tech Square",sub:"Georgia Tech campus · 75 5th St NW",land:"Next to the Biltmore Hotel",hours:"Open until 7 PM"},
  buck:{name:"Buckhead Village",sub:"3035 Peachtree Rd NE",land:"Near the Buckhead Village shops",hours:"Open until 8 PM"},
  dec:{name:"Decatur Square",sub:"101 E Court Sq",land:"Facing the courthouse square",hours:"Open until 9 PM"},
+ mid:{name:"Midtown Station",sub:"Peachtree St NW & 4th St",land:"Across from the transit station",hours:"Open until 6 PM"},
+ peach:{name:"Peachtree & 10th",sub:"10th St NE & Peachtree St",land:"Corner of 10th St",hours:"Open until 7 PM"},
  len:{name:"Lenox Square",sub:"3393 Peachtree Rd NE",land:"Inside the Lenox mall, Level 1",hours:"Open until 9 PM"}
 };
-const DIST={1:{tech:0,buck:4.9,dec:6.1,len:6.5},2:{tech:6.0,buck:7.5,dec:0.4,len:9.0},3:{tech:0,buck:4.9,dec:6.1,len:6.5}};
+const DIST={1:{tech:0,mid:0.3,peach:0.5,buck:4.9,dec:6.1,len:6.5},2:{tech:6.0,mid:6.2,peach:6.4,buck:7.5,dec:0.4,len:9.0},3:{tech:0,mid:0.3,peach:0.5,buck:4.9,dec:6.1,len:6.5}};
 const MENU=[{id:"latte",n:"Iced Caffe Latte",p:5.45},{id:"brew",n:"Cold Brew",p:4.75},{id:"cro",n:"Butter Croissant",p:3.75}];
 let S;
 function fresh(keep){S={mode:keep?keep.mode:"base",scn:keep?keep.scn:1,screen:"home",tab:"Favorites",store:null,cart:[],taps:0,t0:null,log:[],done:false,warned:false,ready:false};}
@@ -90,7 +97,7 @@ function logEv(t){const now=S.t0?((Date.now()-S.t0)/1000).toFixed(1):"0.0";S.log
 function list(){
  const ks=Object.keys(STORES);
  if(S.mode==="base"){
-   if(S.tab==="Nearby") return S.scn!==2?["tech","buck","dec","len"]:["dec","tech","buck","len"];
+   if(S.tab==="Nearby") return S.scn!==2?["tech","mid","peach","buck","dec","len"]:["dec","tech","mid","peach","buck","len"];
    if(S.tab==="Previous") return S.scn!==2?["tech","buck"]:["tech","dec"];
    return S.scn!==2?["buck","dec","len"]:["dec","tech","buck"];     // favorites: far stores first, as observed
  }
@@ -99,7 +106,17 @@ function list(){
  return ks.sort((a,b)=>DIST[S.scn][a]-DIST[S.scn][b]);
 }
 function rowHtml(k){return `<div class="row" data-a="pick" data-k="${k}"><div><b>${STORES[k].name}</b><small>${d(k)} mi · ${STORES[k].hours}</small></div><div class="btn">Order here</div></div>`}
-function map(){const you=S.scn!==2?'<div class="dot" style="left:150px;top:46px"></div><div class="maplbl" style="left:120px;top:72px">You are here · Georgia Tech</div><div class="pin" style="left:157px;top:44px"></div>':'<div class="dot" style="left:60px;top:70px"></div><div class="maplbl" style="left:30px;top:90px">You are here · home</div><div class="pin" style="left:240px;top:30px"></div>';return `<div class="map">${you}<div class="pin" style="left:300px;top:70px"></div></div>`}
+function map(){
+ const near=S.scn!==2;
+ const pos=near?{tech:[154,42],mid:[190,36],peach:[120,74],buck:[300,18],dec:[22,26],len:[300,92]}:{dec:[80,58],tech:[250,28],mid:[262,58],peach:[236,84],buck:[190,96],len:[310,14]};
+ const dot=near?'<div class="dot" style="left:150px;top:46px"></div><div class="maplbl" style="left:96px;top:100px">You are here \u00b7 Georgia Tech</div>':'<div class="dot" style="left:60px;top:70px"></div><div class="maplbl" style="left:20px;top:94px">You are here \u00b7 home</div>';
+ let pins="";
+ for(const k of Object.keys(pos)){const [x,y]=pos[k];const cur=S.mode==="new"&&near&&k==="tech";const cls=S.mode==="new"?(cur?"pin cur":"pin dim"):"pin";
+  pins+=`<div class="${cls}" data-a="pin" data-k="${k}" style="left:${x}px;top:${y}px"></div>`;
+  if(cur)pins+=`<div class="maplbl" style="left:${x+16}px;top:${y-14}px;font-weight:700">Tech Square \u00b7 you are here</div>`;}
+ const sel=S.sel?`<div class="sheet"><div><b>${STORES[S.sel].name}</b><small>${d(S.sel)} mi \u00b7 ${STORES[S.sel].hours}</small></div><div class="btn fill" data-a="pick" data-k="${S.sel}">Order here</div></div>`:"";
+ return `<div class="map">${pins}${dot}</div>${sel}`;
+}
 // ---------- screens ----------
 function screenHome(){const again=S.scn===3?`<div class="card"><b>Order again</b><br>Iced Caffe Latte \u00b7 Grande<br><span class="small">Last Saturday \u00b7 Buckhead Village</span><div class="btn fill big" data-a="reorder">Order again</div></div>`:"";return `<h1>Good morning</h1>${again}<div class="hello"><b>124 Stars</b><br><span class="small">76 more for your next reward</span></div><div class="card">Pick up your favorites<br><span class="small">Tap Order to start</span></div><div class="card">Offers: 2x Stars on cold drinks</div>`}
 function screenOrder(){
@@ -111,8 +128,8 @@ function screenOrder(){
    if(S.tab==="Favorites"&&false)S.tab="Nearby";
  }
  if(S.mode==="new"&&S.tab==="Favorites"&&!S.touched)S.tab="Nearby";
+ h+=map();
  h+=`<div class="tabs">${["Nearby","Previous","Favorites"].map(t=>`<div class="tab ${S.tab===t?"on":""}" data-a="tab" data-k="${t}">${t}</div>`).join("")}</div>`;
- if(S.mode==="base")h+=map();
  h+=list().filter(k=>!(S.mode==="new"&&((S.scn!==2&&k==="tech")||(S.scn===2&&k==="tech")))).map(rowHtml).join("");
  return h;
 }
@@ -176,9 +193,10 @@ function act(a,k){
  S.taps++;
  if(a==="nav"){logEv("nav "+k);S.screen=k;if(k==="order"&&!S.tFirst)S.tFirst=((Date.now()-S.t0)/1000).toFixed(1)+"s"}
  else if(a==="reorder"){S.store="buck";S.cart=["latte"];S.screen="review";S.warnDismissed=false;logEv("order again (Buckhead Village)")}
+ else if(a==="pin"){S.sel=k;logEv("map pin: "+STORES[k].name)}
  else if(a==="tab"){S.tab=k;S.touched=true;logEv("tab "+k)}
- else if(a==="pick"){S.store=k;S.screen="menu";S.warnDismissed=false;logEv("picked store: "+STORES[k].name)}
- else if(a==="change"){S.screen="order";logEv("change store")}
+ else if(a==="pick"){S.sel=null;S.store=k;S.screen="menu";S.warnDismissed=false;logEv("picked store: "+STORES[k].name)}
+ else if(a==="change"){S.sel=null;S.screen="order";logEv("change store")}
  else if(a==="add"){S.cart.push(k);logEv("add "+k)}
  else if(a==="review"){S.screen="review";logEv("review")}
  else if(a==="fixstore"){S.store=k;S.warnDismissed=false;logEv("warning: switched to "+STORES[k].name)}
