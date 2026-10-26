@@ -61,8 +61,13 @@ h1{font-size:22px;margin:6px 0 8px}
 .dn{display:inline-block;font-size:26px;font-weight:800;color:var(--dg);margin-right:10px}
 #dhdr{margin-bottom:10px}
 #flow{margin-top:12px}
-#next,#rnext{display:block;width:100%;max-width:420px;margin:14px auto 4px;padding:18px 24px;font-size:22px;font-weight:800;text-align:center;border-radius:14px;box-shadow:0 4px 14px rgba(0,112,74,.35)}
+#next{box-shadow:0 4px 14px rgba(0,112,74,.35);font-weight:800}
 #flow:has(#next){text-align:center}
+.intro{padding-left:20px;line-height:1.5}.intro li{margin:6px 0}
+.go.big{display:block;width:100%;max-width:420px;margin:14px auto 4px;padding:18px 24px;font-size:22px;border-radius:14px;text-align:center}
+.pl{display:inline-block;margin:3px}.pl input{position:absolute;opacity:0}.pl span{display:inline-block;min-width:44px;padding:10px 0;text-align:center;border:2px solid #b9c4be;border-radius:10px;font-weight:700;cursor:pointer;background:#fff}.pl input:checked+span{background:var(--g);color:#fff;border-color:var(--g)}.pl.wide span{padding:10px 16px}
+.scale{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:#5d6b64;margin-top:4px}.scale>div{white-space:nowrap}
+#err{color:#b3261e;font-weight:700;text-align:center}
 .pin{cursor:pointer;width:16px;height:16px}
 .pin.dim{background:#8a948f;width:13px;height:13px}
 .pin.cur{background:var(--dg);width:22px;height:22px;box-shadow:0 0 0 3px #fff}
@@ -164,7 +169,7 @@ function screenReview(){
  h+=`<div class="btn fill big" ${blocked?'style="opacity:.45"':''} data-a="place">${S.mode==="new"?"Place order at "+st.name:"Place order"}</div>`;
  return h;
 }
-function screenDone(){const st=STORES[S.store];return `<h1>Order placed</h1><div class="card"><b>Thank you!</b><br>Pickup at <b>${st.name}</b><br><span class="small">${st.sub}</span></div><div class="small">The research panel shows the result of this task.</div>`}
+function screenDone(){const st=STORES[S.store];return `<h1>Order placed</h1><div class="card"><b>Thank you!</b><br>Pickup at <b>${st.name}</b><br><span class="small">${st.sub}</span></div>${ADMIN?`<div class="small">The research panel shows the result of this task.</div>`:""}`}
 function render(){
  const scr=S.screen;let body=scr==="home"?screenHome():scr==="order"?screenOrder():scr==="menu"?screenMenu():scr==="review"?screenReview():screenDone();
  const on=scr==="home"?"home":"order";
@@ -224,8 +229,8 @@ const STM=["The app helped me order at the right store.","It was easy to underst
 const TASK={1:"You are inside the Starbucks at Tech Square on the Georgia Tech campus. Order your usual iced latte for pickup at the store you are in.",2:"You are at home in Decatur. Order ahead your usual iced latte for pickup at your regular store, Tech Square.",3:"You are inside the Starbucks at Tech Square. On the Home screen, use the <b>Order again</b> button to reorder your usual iced latte from last Saturday, then place the order."};
 const runs=m=>[1,2,3].map(n=>({t:"run",m,n}));
 const FIRST=ORD==="A"?"base":"new",SECOND=ORD==="A"?"new":"base";
-const STAGES=[...runs(FIRST),{t:"rate",m:FIRST},...runs(SECOND),{t:"rate",m:SECOND},{t:"final"}];
-const P={idx:-1,res:[],rate:{base:[0,0,0],new:[0,0,0]},pref:"",why:"",chg:"",age:""};
+const STAGES=[...runs(FIRST),...runs(SECOND),{t:"final"}];
+const P={idx:-1,res:[],rate:{base:[0,0,0],new:[0,0,0]},pref:"",why:"",chg:"",age:"Prefer not to say"};
 const DN=m=>m==="base"?"Design X":"Design Y";
 function verName(m){return m==="base"?"cur":"new"}
 function startRun(){const g=STAGES[P.idx];fresh({mode:g.m,scn:g.n});S.t0=null;render();flow()}
@@ -241,34 +246,35 @@ function link(){
  if(P.chg.trim())q.push([FQ.chg,P.chg.trim()]);
  return "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?"+q.map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
 }
+function pills(name,cur){return [1,2,3,4,5].map(v=>`<label class="pl"><input type="radio" name="${name}" value="${v}" ${cur===v?"checked":""}><span>${v}</span></label>`).join("")}
 function flow(){
  const f=document.getElementById("flow"),hd=document.getElementById("dhdr"),stage=document.querySelector(".stage");
  if(ADMIN){document.getElementById("ctl").classList.remove("hide");document.getElementById("side").classList.remove("hide");if(P.idx<0){f.classList.add("hide");hd.classList.add("hide");return}}
  else{document.getElementById("ctl").classList.add("hide");document.getElementById("side").classList.add("hide")}
  f.classList.remove("hide");hd.classList.add("hide");
- if(P.idx<0){stage.classList.remove("hide");stage.classList.add("hide");f.innerHTML=`<h2>Coffee-ordering app: quick test</h2><p>Thank you for helping with my CS6750 project. You will try a <b>fictional</b> coffee-ordering app in two designs (Design X and Design Y). In each design you do three short tasks and then answer three quick questions about that design right away. At the end you send your answers with one click. About 8 minutes in total. Taking part is voluntary and you can stop at any time. Nothing real is ordered, and this page collects no personal data.</p><p>Please use the app like you would use a real one. The page counts your taps and time.</p><button class="go" id="go">Start</button>`;document.getElementById("go").onclick=()=>{stage.classList.remove("hide");P.idx=-1;nextStage()};return}
+ if(P.idx<0){stage.classList.add("hide");f.innerHTML=`<h2>Try a coffee-ordering app</h2><ul class="intro"><li>You will test <b>two designs</b> of a <b>fictional</b> app: Design X and Design Y.</li><li>In each design you do <b>3 short orders</b>, then answer <b>3 quick questions</b>.</li><li>About <b>8 minutes</b>. Nothing real is ordered. No personal data is collected. You can stop any time.</li></ul><p class="small">Use the app like a real one. The page counts taps and time.</p><button class="go big" id="go">Start</button>`;document.getElementById("go").onclick=()=>{stage.classList.remove("hide");P.idx=-1;nextStage()};return}
  if(P.idx>=STAGES.length){
   stage.classList.add("hide");
-  f.innerHTML=`<h2>Thank you!</h2><p>Last step: on the next page (Georgia Tech login) all your answers are already filled in. <b>Just press Submit.</b> You can still change an answer there if you want.</p><a class="go" href="${link()}" target="_blank" rel="noopener">Open the form and submit</a>`;return}
+  f.innerHTML=`<h2>Thank you!</h2><p>One last click: your answers are already filled in on the next page. Just press <b>Submit</b> there.</p><a class="go big" href="${link()}" target="_blank" rel="noopener">Open the form</a>`;return}
  const g=STAGES[P.idx];
- if(g.t==="rate"){
-  if(!S.free){fresh({mode:g.m,scn:1});S.free=true;render()}
-  stage.classList.remove("hide");hd.classList.remove("hide");
-  hd.innerHTML=`<span class="dn">${DN(g.m)}</span><span class="step">Questions</span><div class="small">The design is still here to look at and tap while you answer. Think about the three tasks you just did in <b>${DN(g.m)}</b>.</div>`;
-  const r=P.rate[g.m];
-  f.innerHTML=`<h2>About ${DN(g.m)}</h2><p>How much do you agree?</p>`+STM.map((t,i)=>`<div class="task"><b>${t}</b><div style="margin-top:4px">${[1,2,3,4,5].map(v=>`<label style="margin-right:10px;white-space:nowrap"><input type="radio" name="r${i}" value="${v}" ${r[i]===v?"checked":""}> ${v}</label>`).join("")}</div></div>`).join("")+`<div class="small">1 = strongly disagree, 5 = strongly agree</div><button class="go" id="rnext">Continue</button>`;
-  document.getElementById("rnext").onclick=()=>{const vals=[0,1,2].map(i=>+(document.querySelector(`input[name=r${i}]:checked`)||{}).value||0);if(vals.includes(0)){alert("Please answer all three questions.");return}P.rate[g.m]=vals;nextStage()};return}
  if(g.t==="final"){
   stage.classList.add("hide");
-  f.innerHTML=`<h2>Last questions</h2><div class="task"><b>Which design would you prefer to use?</b><div style="margin-top:4px">${["Design X","Design Y","No difference"].map(v=>`<label style="margin-right:12px"><input type="radio" name="pf" value="${v}" ${P.pref===v?"checked":""}> ${v}</label>`).join("")}</div></div><div class="task"><b>(Optional) Why? What was clear or confusing?</b><textarea id="why" rows="2" style="width:100%">${P.why}</textarea></div><div class="task"><b>(Optional) What would you change in Design Y?</b><textarea id="chg" rows="2" style="width:100%">${P.chg}</textarea></div><div class="task"><b>What is your age group?</b><select id="age"><option value="">Choose</option>${["18-24","25-34","35-44","45-54","55 or older","Prefer not to say"].map(v=>`<option ${P.age===v?"selected":""}>${v}</option>`).join("")}</select></div><p class="small">Design X = the design you used in tasks ${ORD==="A"?"1-3":"4-6"}; Design Y = tasks ${ORD==="A"?"4-6":"1-3"}.</p><button class="go" id="fin">Review and send</button>`;
-  document.getElementById("fin").onclick=()=>{P.pref=(document.querySelector("input[name=pf]:checked")||{}).value||"";P.why=document.getElementById("why").value;P.chg=document.getElementById("chg").value;P.age=document.getElementById("age").value;if(!P.pref||!P.age){alert("Please choose a preferred design and your age group.");return}P.idx++;flow()};return}
- const m=g.m,n=g.n,rn=runNo();
+  f.innerHTML=`<h2>Last question</h2><div class="task"><b>Which design would you rather use?</b><div class="opt">${["Design X","Design Y","No difference"].map(v=>`<label class="pl wide"><input type="radio" name="pf" value="${v}" ${P.pref===v?"checked":""}><span>${v}</span></label>`).join("")}</div></div><div class="task"><b>Anything that was confusing or that you would change? (optional)</b><textarea id="why" rows="3" style="width:100%">${P.why}</textarea></div><div class="small" id="err"></div><button class="go big" id="fin">Finish</button>`;
+  document.getElementById("fin").onclick=()=>{P.pref=(document.querySelector("input[name=pf]:checked")||{}).value||"";P.why=document.getElementById("why").value;if(!P.pref){document.getElementById("err").textContent="Please choose one design.";return}P.idx++;flow()};return}
+ const m=g.m,n=g.n;
  stage.classList.remove("hide");hd.classList.remove("hide");
- if(S.done){hd.innerHTML=`<span class="dn">${DN(m)}</span><span class="step">Task ${rn} of 6</span><div class="task"><b>Order placed.</b> Press Next when you are ready.</div>`;
-  f.innerHTML=`<button class="go" id="next">Next</button>`;
-  document.getElementById("next").onclick=()=>{P.res.push(`${verName(m)}-S${n}:store=${S.store},taps=${S.taps},sec=${S.tDone||""},warn=${S.warnShown?1:0},kept=${S.keptWrong?1:0}`);nextStage()};return}
- hd.innerHTML=`<span class="dn">${DN(m)}</span><span class="step">Task ${rn} of 6</span><div class="task">${TASK[n]}</div>`;
- f.innerHTML=`<div class="small">Tap on the phone above. Start from the Home screen. The Next button appears here after you place the order.</div>`;
+ const part=`<span class="dn">${DN(m)}</span><span class="step">Order ${n} of 3</span>`;
+ if(S.done){
+  const rec=()=>P.res.push(`${verName(m)}-S${n}:store=${S.store},taps=${S.taps},sec=${S.tDone||""},warn=${S.warnShown?1:0},kept=${S.keptWrong?1:0}`);
+  if(n<3){hd.innerHTML=`${part}<div class="task"><b>✓ Order placed.</b></div>`;
+   f.innerHTML=`<button class="go big" id="next">Next order →</button>`;
+   document.getElementById("next").onclick=()=>{rec();nextStage()};return}
+  const r=P.rate[m];
+  hd.innerHTML=`${part}<div class="task"><b>✓ Order placed.</b> Last step for ${DN(m)}: how much do you agree with these 3 statements about <b>${DN(m)}</b>?</div>`;
+  f.innerHTML=[0,1,2].map(i=>`<div class="task"><b>${STM[i]}</b><div class="scale"><span>disagree</span><div>${pills("r"+i,r[i])}</div><span>agree</span></div></div>`).join("")+`<div class="small" id="err"></div><button class="go big" id="next">${P.idx===STAGES.length-2?"Next":"Next: Design "+(m==="base"?"Y":"X")} →</button>`;
+  document.getElementById("next").onclick=()=>{const vals=[0,1,2].map(i=>+(document.querySelector(`input[name=r${i}]:checked`)||{}).value||0);if(vals.includes(0)){document.getElementById("err").textContent="Please answer all 3 statements.";return}P.rate[m]=vals;rec();nextStage()};return}
+ hd.innerHTML=`${part}<div class="task">${TASK[n]}</div>`;
+ f.innerHTML=`<div class="small">Tap the phone above. The next button appears after you place the order.</div>`;
 }
 flow();
 </script></body></html>
